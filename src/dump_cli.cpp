@@ -102,10 +102,11 @@ void cli_init(void)
 static void cli_parse_cmd(const char *cmd)
 {
 	char *p;
-	char arg[32];
 	
 	while (*cmd == ' ' || *cmd == '\t') cmd++;
 	if (*cmd == '\0') {
+		if (cli_dump_running)
+			dump_platform_debugln("[dump running, type 'stop' to pause]");
 		dump_platform_debug("> ");
 		return;
 	}
@@ -196,12 +197,10 @@ void cli_process(void)
 		if (c < 0) break;
 		
 		if (c == '\r' || c == '\n') {
-			if (s_cmd_idx > 0) {
-				dump_platform_debugln("");
-				s_cmd_buf[s_cmd_idx] = '\0';
-				cli_parse_cmd(s_cmd_buf);
-				s_cmd_idx = 0;
-			}
+			dump_platform_debugln("");
+			s_cmd_buf[s_cmd_idx] = '\0';
+			cli_parse_cmd(s_cmd_buf);
+			s_cmd_idx = 0;
 		}
 		else if (c == 0x08 || c == 0x7F) {
 			if (s_cmd_idx > 0) {
