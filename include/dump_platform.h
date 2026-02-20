@@ -17,6 +17,11 @@ void dump_platform_debug_init(void);
 void dump_platform_debug(const char *fmt, ...);
 void dump_platform_debugln(const char *fmt, ...);
 
+/* Serial input for CLI */
+int  dump_platform_serial_available(void);
+int  dump_platform_serial_read(void);
+void dump_platform_serial_read_line(char *buf, int maxlen);
+
 /* Timer used for packet timing. Units: 0.5us (2MHz). */
 void dump_platform_timer_init(void);
 uint32_t dump_platform_timer_get_us(void);   /* full 32-bit time (0.5us units) */

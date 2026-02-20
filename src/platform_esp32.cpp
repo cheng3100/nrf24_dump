@@ -41,6 +41,30 @@ void dump_platform_debugln(const char *fmt, ...) {
 	Serial.println(buf);
 }
 
+int dump_platform_serial_available(void) {
+	return Serial.available();
+}
+
+int dump_platform_serial_read(void) {
+	return Serial.read();
+}
+
+void dump_platform_serial_read_line(char *buf, int maxlen) {
+	int idx = 0;
+	while (idx < maxlen - 1) {
+		while (!Serial.available()) { yield(); }
+		int c = Serial.read();
+		if (c == '\r' || c == '\n') {
+			if (idx > 0) break;
+			continue;
+		}
+		buf[idx++] = (char)c;
+		Serial.write((char)c);  /* echo */
+	}
+	buf[idx] = '\0';
+	Serial.println();
+}
+
 static uint16_t s_prev_cnt;
 
 void dump_platform_timer_init(void) {

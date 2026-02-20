@@ -11,6 +11,7 @@ uint8_t  RX_num       = 5;
 uint8_t  packet[50];
 uint8_t  packet_in[50];
 uint8_t  packet_length;
+uint8_t  packet_count;
 uint8_t  hopping_frequency[50];
 uint8_t  hopping_frequency_no;
 uint8_t  rf_ch_num;

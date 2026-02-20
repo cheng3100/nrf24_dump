@@ -24,6 +24,7 @@ extern uint8_t  RX_num;        /* address length 3, 4, or 5 */
 extern uint8_t  packet[50];
 extern uint8_t  packet_in[50];
 extern uint8_t  packet_length;
+extern uint8_t  packet_count;
 extern uint8_t  hopping_frequency[50];
 extern uint8_t  hopping_frequency_no;
 extern uint8_t  rf_ch_num;

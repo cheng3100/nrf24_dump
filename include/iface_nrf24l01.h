@@ -83,6 +83,7 @@ extern "C" {
 void NRF24L01_Initialize(void);
 void NRF24L01_WriteReg(uint8_t reg, uint8_t data);
 void NRF24L01_WriteRegisterMulti(uint8_t reg, uint8_t *data, uint8_t length);
+void NRF24L01_ReadRegisterMulti(uint8_t reg, uint8_t *data, uint8_t length);
 uint8_t NRF24L01_ReadReg(uint8_t reg);
 void NRF24L01_ReadPayload(uint8_t *data, uint8_t length);
 void NRF24L01_WritePayload(uint8_t *data, uint8_t length);
@@ -91,6 +92,9 @@ void NRF24L01_FlushRx(void);
 void NRF24L01_SetBitrate(uint8_t bitrate);
 void NRF24L01_SetPower(void);
 void NRF24L01_SetTxRxMode(enum TXRX_State mode);
+
+/* Detection: returns 1 if NRF24L01 detected, 0 otherwise */
+uint8_t NRF24L01_Detect(void);
 #ifdef __cplusplus
 }
 #endif

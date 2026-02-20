@@ -17,7 +17,11 @@
 #define XN297_250K          true
 
 /* Called from dump; implemented in xn297_emu.c */
+#ifdef __cplusplus
+void XN297_Configure(bool crc_en, bool scramble_en, bool bitrate, bool force_nrf = false);
+#else
 void XN297_Configure(bool crc_en, bool scramble_en, bool bitrate, bool force_nrf);
+#endif
 void XN297_SetTXAddr(const uint8_t *addr, uint8_t len);
 void XN297_SetRXAddr(const uint8_t *addr, uint8_t rx_packet_len);
 void XN297_SetTxRxMode(enum TXRX_State mode);

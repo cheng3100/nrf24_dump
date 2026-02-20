@@ -44,6 +44,15 @@ uint8_t NRF24L01_ReadReg(uint8_t reg)
 	return data;
 }
 
+void NRF24L01_ReadRegisterMulti(uint8_t reg, uint8_t *data, uint8_t length)
+{
+	NRF_CSN_off;
+	SPI_Write(R_REGISTER | (REGISTER_MASK & reg));
+	for (uint8_t i = 0; i < length; i++)
+		data[i] = SPI_Read();
+	NRF_CSN_on;
+}
+
 void NRF24L01_ReadPayload(uint8_t *data, uint8_t length)
 {
 	NRF_CSN_off;
@@ -123,4 +132,24 @@ void NRF24L01_Initialize(void)
 	NRF24L01_WriteReg(NRF24L01_1D_FEATURE, 0x01);
 	NRF24L01_SetPower();
 	NRF24L01_SetTxRxMode(TX_EN);
+}
+
+uint8_t NRF24L01_Detect(void)
+{
+	uint8_t test_addr[5] = { 0xA5, 0x5A, 0xC3, 0x3C, 0x69 };
+	uint8_t read_addr[5] = { 0 };
+	
+	NRF24L01_WriteRegisterMulti(NRF24L01_10_TX_ADDR, test_addr, 5);
+	NRF24L01_ReadRegisterMulti(NRF24L01_10_TX_ADDR, read_addr, 5);
+	
+	for (uint8_t i = 0; i < 5; i++) {
+		if (read_addr[i] != test_addr[i])
+			return 0;
+	}
+	
+	uint8_t status = NRF24L01_ReadReg(NRF24L01_07_STATUS);
+	if (status == 0x00 || status == 0xFF)
+		return 0;
+	
+	return 1;
 }
