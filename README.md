@@ -169,24 +169,32 @@ RX: 19644us C=65 S=Y A= 66 4F 47 CC CC P(9)= 32 32 00 32 E0 00 01 5A 51
 
 **GFSK** (Gaussian Frequency Shift Keying) is a modulation technique used by NRF24L01, Bluetooth, and many other 2.4GHz devices.
 
+**FSK vs GFSK comparison:**
+
 ```
-    Frequency
-        ↑
-   f1 ──┼────╮    ╭────╮    ╭────      "1" bits
-        │    │    │    │    │
-   fc ──┼────┼────┼────┼────┼────      Center frequency
-        │    │    │    │    │
-   f0 ──┼────╯    ╰────╯    ╰────      "0" bits
-        │
-        └──────────────────────→ Time
+    FSK (abrupt transitions)          GFSK (smooth Gaussian transitions)
+    
+    Frequency                         Frequency
+        ↑                                 ↑
+   f1 ──┼──┐     ┌──┐     ┌──           ──┼──╮     ╭──╮     ╭──
+        │  │     │  │     │               │  ╲   ╱  ╲   ╱
+   fc ──┼──┼─────┼──┼─────┼──           ──┼───╲─╱────╲─╱────
+        │  │     │  │     │               │    ╳      ╳
+   f0 ──┼──┘     └──┘     └──           ──┼──╱ ╲    ╱ ╲
+        │                                 │ ╱   ╲──╱   ╲──
+        └──────────────────→ Time         └──────────────────→ Time
               
-    Binary:  1    0    1    0    1
+    Binary:  1  0  1  0  1                Binary:  1  0  1  0  1
+    
+    Problem: Sharp transitions           Solution: Gaussian filter smooths
+    create wide bandwidth                transitions, reduces bandwidth
 ```
 
 **Key concepts:**
-- **Bit "1"**: Frequency shifts UP from center (e.g., +160kHz)
+- **Bit "1"**: Frequency shifts UP from center (e.g., +160kHz for NRF24L01)
 - **Bit "0"**: Frequency shifts DOWN from center (e.g., -160kHz)
-- **Gaussian filter**: Smooths transitions to reduce bandwidth
+- **Gaussian filter**: Smooths the frequency transitions to reduce spectral bandwidth
+- **BT (Bandwidth-Time product)**: NRF24L01 uses BT=0.5, which balances bandwidth efficiency and ISI (Inter-Symbol Interference)
 
 ### 2.4GHz ISM Band Comparison
 
@@ -197,12 +205,18 @@ RX: 19644us C=65 S=Y A= 66 4F 47 CC CC P(9)= 32 32 00 32 E0 00 01 5A 51
     ├────────────────────────────────────────────────────┤
     │                  ISM Band (83.5 MHz)               │
     │                                                    │
-    │  NRF24L01/XN297 (1-2 MHz channels)                │
+    │  NRF24L01/XN297 (1-2 MHz channels, 126 channels)  │
     │  ├─┬─┬─┬─┬─┬─┬─┬─┬─┬─┬─┬─┬─┬─┬─┬─┬─┬─┬─┬─┬─┬─┤   │
-    │  0 5 10  20  30  40  50  60  70  80  84           │
+    │  0 5 10  20  30  40  50  60  70  80 100 125       │
     │                                                    │
-    │  Bluetooth (1 MHz channels, 79 channels)          │
+    │  Bluetooth Classic (1 MHz channels, 79 channels)  │
     │  ├┬┬┬┬┬┬┬┬┬┬┬┬┬┬┬┬┬┬┬┬┬┬┬┬┬┬┬┬┬┬┬┬┬┬┬┬┬┬┬┬┬┬┬┬┬┤  │
+    │  0                    39                    78     │
+    │                                                    │
+    │  Bluetooth LE (2 MHz channels, 40 channels)       │
+    │  ├─┬─┬─┬─┬─┬─┬─┬─┬─┬─┬─┬─┬─┬─┬─┬─┬─┬─┬─┤         │
+    │  0    10         20         30       39           │
+    │  (Adv: 37,38,39 spread across band)               │
     │                                                    │
     │  WiFi 2.4GHz (20/40 MHz channels)                 │
     │  ├──────┼──────┼──────┼──────┼──────┼──────┤      │
@@ -212,17 +226,18 @@ RX: 19644us C=65 S=Y A= 66 4F 47 CC CC P(9)= 32 32 00 32 E0 00 01 5A 51
 
 ### Protocol Comparison
 
-| Feature | NRF24L01/XN297 | Bluetooth LE | WiFi 2.4GHz |
-|---------|----------------|--------------|-------------|
-| **Modulation** | GFSK | GFSK | OFDM (many subcarriers) |
-| **Channel Width** | 1-2 MHz | 1 MHz | 20/40 MHz |
-| **Channels** | 126 (0-125) | 40 (BLE) / 79 (Classic) | 13-14 |
-| **Data Rate** | 250K/1M/2M bps | 1M/2M bps | Up to 600 Mbps |
-| **Range** | 10-100m (with PA) | 10-100m | 30-100m |
-| **Power** | Very low (~12mA TX) | Low (~15mA TX) | High (~200mA TX) |
-| **Hopping** | Optional (app-defined) | Mandatory (1600 hops/s) | No |
-| **Packet Size** | 1-32 bytes | 0-255 bytes | Up to 2304 bytes |
-| **Latency** | Very low (<1ms) | Low (~3ms) | Medium (~10ms) |
+| Feature | NRF24L01/XN297 | BT Classic | Bluetooth LE | WiFi 2.4GHz |
+|---------|----------------|------------|--------------|-------------|
+| **Modulation** | GFSK | GFSK | GFSK | OFDM |
+| **Channel Width** | 1 MHz | 1 MHz | 2 MHz | 20/40 MHz |
+| **Channels** | 126 (0-125) | 79 | 40 | 13-14 |
+| **Data Rate** | 250K/1M/2M | 1M/2M/3M | 1M/2M | Up to 600M |
+| **Range** | 10-100m | 10-100m | 10-100m | 30-100m |
+| **TX Power** | ~12mA | ~25mA | ~15mA | ~200mA |
+| **Hopping** | App-defined | 1600 hops/s | 1600 hops/s | No |
+| **Packet Size** | 1-32 bytes | Up to 1021 | 0-255 bytes | Up to 2304 |
+| **Latency** | <1ms | ~100ms | ~3ms | ~10ms |
+| **Use Case** | RC toys, sensors | Audio, file transfer | IoT, wearables | Internet |
 
 ### Frequency Hopping
 
